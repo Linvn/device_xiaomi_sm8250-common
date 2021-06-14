@@ -211,7 +211,7 @@
     <integer-array name="config_longPressVibePattern">
         <item>10</item>
         <item>20</item>
-        <item>30</item>>
+        <item>30</item>
     </integer-array>
 
     <!-- Vibrator pattern for feedback about touching a virtual key -->
@@ -240,9 +240,6 @@
         <item>"/system_ext/priv-app/SystemUI/oat/arm64/SystemUI.odex"</item>
         <item>"/system/lib64/libsurfaceflinger.so"</item>
     </string-array>
-
-    <!-- Should the pinner service pin the Camera application? -->
-    <bool name="config_pinnerCameraApp">true</bool>
 
     <!-- Should the pinner service pin the Home application? -->
     <bool name="config_pinnerHomeApp">true</bool>
