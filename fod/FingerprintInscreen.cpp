@@ -20,6 +20,7 @@
 #define COMMAND_NIT 10
 #define PARAM_NIT_FOD 1
 #define PARAM_NIT_NONE 0
+#define BRIGHTNESS_PATH "/sys/class/backlight/panel0-backlight/brightness"
 
 #define FOD_UI_PATH "/sys/devices/platform/soc/soc:qcom,dsi-display-primary/fod_ui"
 
@@ -36,23 +37,13 @@ namespace inscreen {
 namespace V1_0 {
 namespace implementation {
 
-static bool readBool(int fd) {
-    char c;
-    int rc;
+template <typename T>
+static T get(const std::string& path, const T& def) {
+    std::ifstream file(path);
+    T result;
 
-    rc = lseek(fd, 0, SEEK_SET);
-    if (rc) {
-        LOG(ERROR) << "failed to seek fd, err: " << rc;
-        return false;
-    }
-
-    rc = read(fd, &c, sizeof(char));
-    if (rc != 1) {
-        LOG(ERROR) << "failed to read bool from fd, err: " << rc;
-        return false;
-    }
-
-    return c != '0';
+    file >> result;
+    return file.fail() ? def : result;
 }
 
 // Read value from path and close file.
@@ -71,28 +62,8 @@ FingerprintInscreen::FingerprintInscreen() {
     mXiaomiFingerprintService = IXiaomiFingerprint::getService();
 
     std::thread([this]() {
-        int fd = open(FOD_UI_PATH, O_RDONLY);
-        if (fd < 0) {
-            LOG(ERROR) << "failed to open fd, err: " << fd;
-            return;
-        }
-
-        struct pollfd fodUiPoll = {
-            .fd = fd,
-            .events = POLLERR | POLLPRI,
-            .revents = 0,
-        };
-
-        while (true) {
-            int rc = poll(&fodUiPoll, 1, -1);
-            if (rc < 0) {
-                LOG(ERROR) << "failed to poll fd, err: " << rc;
-                continue;
-            }
-
-            mXiaomiFingerprintService->extCmd(COMMAND_NIT,
-                    readBool(fd) ? PARAM_NIT_FOD : PARAM_NIT_NONE);
-        }
+            mXiaomiFingerprintService->extCmd(COMMAND_NIT,PARAM_NIT_FOD);
+        
     }).detach();
 }
 
@@ -105,11 +76,15 @@ Return<void> FingerprintInscreen::onFinishEnroll() {
 }
 
 Return<void> FingerprintInscreen::onPress() {
+    acquire_wake_lock(PARTIAL_WAKE_LOCK, LOG_TAG);
+    mXiaomiFingerprintService->extCmd(COMMAND_NIT, PARAM_NIT_FOD);
     return Void();
 }
 
 Return<void> FingerprintInscreen::onRelease() {
     WriteToFile(BRIGHTNESS_PATH, ReadFromFile(BRIGHTNESS_PATH));
+    mXiaomiFingerprintService->extCmd(COMMAND_NIT, PARAM_NIT_NONE);
+    release_wake_lock(LOG_TAG);
     return Void();
 }
 
@@ -158,7 +133,20 @@ Return<void> FingerprintInscreen::setLongPressEnabled(bool) {
 }
 
 Return<int32_t> FingerprintInscreen::getDimAmount(int32_t /* brightness */) {
-    return 0;
+     float alpha;
+    int realBrightness = get(BRIGHTNESS_PATH, 0);
+
+    if (realBrightness >= 500) {
+        alpha = 1.0 - pow(realBrightness / 2047.0 * 430.0 / 600.0, 0.485);
+    } else if (realBrightness >= 250) {
+        alpha = 1.0 - pow(realBrightness / 2047.0 * 430.0 / 600.0, 0.530);
+    } else if (realBrightness > 60) {
+         alpha = 1.0 - pow(realBrightness / 1680.0, 0.525);
+    } else {
+        alpha = 1.0 - pow(realBrightness / 1680.0, 0.475);
+    }
+
+    return 255 * alpha;
 }
 
 Return<bool> FingerprintInscreen::shouldBoostBrightness() {
