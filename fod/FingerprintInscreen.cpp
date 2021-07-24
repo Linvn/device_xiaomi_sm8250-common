@@ -7,7 +7,6 @@
 #define LOG_TAG "FingerprintInscreenService"
 
 #include "FingerprintInscreen.h"
-#include <android-base/file.h>
 #include <android-base/logging.h>
 #include <hardware_legacy/power.h>
 #include <cmath>
@@ -24,11 +23,6 @@
 
 #define FOD_UI_PATH "/sys/devices/platform/soc/soc:qcom,dsi-display-primary/fod_ui"
 
-#define BRIGHTNESS_PATH "/sys/class/backlight/panel0-backlight/brightness"
-
-using ::android::base::ReadFileToString;
-using ::android::base::WriteStringToFile;
-
 namespace vendor {
 namespace lineage {
 namespace biometrics {
@@ -44,18 +38,6 @@ static T get(const std::string& path, const T& def) {
 
     file >> result;
     return file.fail() ? def : result;
-}
-
-// Read value from path and close file.
-static uint32_t ReadFromFile(const std::string& path) {
-    std::string content;
-    ReadFileToString(path, &content, true);
-    return std::stoi(content);
-}
-
-// Write value to path and close file.
-static bool WriteToFile(const std::string& path, uint32_t content) {
-    return WriteStringToFile(std::to_string(content), path);
 }
 
 FingerprintInscreen::FingerprintInscreen() {
@@ -82,7 +64,6 @@ Return<void> FingerprintInscreen::onPress() {
 }
 
 Return<void> FingerprintInscreen::onRelease() {
-    WriteToFile(BRIGHTNESS_PATH, ReadFromFile(BRIGHTNESS_PATH));
     mXiaomiFingerprintService->extCmd(COMMAND_NIT, PARAM_NIT_NONE);
     release_wake_lock(LOG_TAG);
     return Void();
