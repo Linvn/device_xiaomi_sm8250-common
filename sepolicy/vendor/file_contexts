@@ -53,7 +53,7 @@
 /mnt/vendor/dsp/fastrpc_shell_3                                         u:object_r:public_adsprpcd_file:s0
 
 # Health
-/sys/devices/platform/soc/c440000.qcom,spmi/spmi-0/spmi0-02/c440000.qcom,spmi:qcom,pm8150b@2:qcom,qpnp-smb5/power_supply/wireless(/.*)?             u:object_r:sysfs_wireless_supply:s0
+/sys/devices/platform/soc/c440000.qcom,spmi/spmi-0/spmi0-02/c440000.qcom,spmi:qcom,pm8150b@2:qcom,qpnp-smb5/power_supply/wireless(/.*)?         u:object_r:sysfs_wireless_supply:s0
 
 # IR
 /dev/ir_spi                                                             u:object_r:lirc_device:s0
@@ -83,7 +83,7 @@
 /sys/devices/platform/soc/c440000.qcom,spmi/spmi-0/spmi0-02/c440000.qcom,spmi:qcom,pm8150b@2:vadc@3100/iio:device1(/.*)?        u:object_r:vendor_sysfs_iio:s0
 
 # SSR
-/sys/devices(/platform)?/soc/[a-z0-9\.:]+,[a-z0-9\-\_]+/subsys[0-9]+/name                                                       u:object_r:vendor_sysfs_ssr:s0
+/sys/devices(/platform)?/soc/[a-z0-9\.:]+,[a-z0-9\-\_]+/subsys[0-9]+/name         u:object_r:vendor_sysfs_ssr:s0
 
 # Thermal
 /vendor/bin/mi_thermald                                                 u:object_r:mi_thermald_exec:s0
